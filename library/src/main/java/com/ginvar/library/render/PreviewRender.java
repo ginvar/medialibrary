@@ -1,9 +1,11 @@
 package com.ginvar.library.render;
 
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -17,7 +19,12 @@ import com.ginvar.library.gles.WindowSurface;
 import com.ginvar.library.gles.utils.GLDataUtils;
 import com.ginvar.library.gles.utils.GLFrameBuffer;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 
 /**
  * Created by ginvar on 2019/8/28.
@@ -354,6 +361,19 @@ public class PreviewRender implements SurfaceTexture.OnFrameAvailableListener {
 
                 mTextureDrawer4ExtOES.setTransform(mTransformMatrix);
                 mTextureDrawer4ExtOES.drawTexture(mCaptureTextureId, previewHeight, previewWidth, previewHeight, previewWidth);
+
+                GLES20.glFlush();
+
+
+//                IntBuffer rgbaBuffer = IntBuffer.allocate(previewWidth * previewHeight * 4);
+
+//                rgbaBuffer.position(0);
+//                GLES20.glReadPixels(0, 0, previewHeight, previewWidth, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, rgbaBuffer);
+//
+//                int[] buffer = new int[previewWidth * previewHeight * 4];
+//                rgbaBuffer.get(buffer);
+//                Bitmap bitmap = Bitmap.createBitmap(buffer, previewHeight, previewWidth, Bitmap.Config.ARGB_8888);
+//                saveToJPEG(bitmap, "oes");
                 mPreviewFBO.unbind();
 
                 GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -371,35 +391,33 @@ public class PreviewRender implements SurfaceTexture.OnFrameAvailableListener {
                         (), mViewWidth, mViewHeight);
 
                 mPreviewWindowSurface.swapBuffers();
+
+//                IntBuffer rgbaBuffer1 = IntBuffer.allocate(previewWidth * previewHeight * 4);
+////                rgbaBuffer.order(ByteOrder.LITTLE_ENDIAN);
+//                rgbaBuffer1.position(0);
+//                GLES20.glReadPixels(0, 0, previewHeight, previewWidth, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, rgbaBuffer1);
+//
+//                int[] buffer = new int[previewWidth * previewHeight * 4];
+//                rgbaBuffer.get(buffer);
+//                Bitmap bitmap = Bitmap.createBitmap(buffer, previewHeight, previewWidth, Bitmap.Config.ARGB_8888);
+//                saveToJPEG(bitmap, "oes");
                 // mGLManager.swapBuffers();
             }
         });
     }
 
-    protected void buildMatrix(float srcWidth, float srcHeight) {
+    private void saveToJPEG(Bitmap bitmap, String fileName) {
+        String dir = "/data/data/com.ginvar.medialibrary/cache/";
 
-            Matrix.setIdentityM(mViewMatrix, 0);
-            Matrix.setIdentityM(mProjectionMatrix, 0);
-            Matrix.setIdentityM(mModelMatrix, 0);
-
-            Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-            Matrix.orthoM(mProjectionMatrix, 0, 0.0f, srcWidth, 0.0f, srcHeight, -2.0f, 2.0f);
-            Matrix.translateM(mModelMatrix, 0, srcWidth / 2, srcHeight / 2, 0.0f);
-            Matrix.scaleM(mModelMatrix, 0, srcWidth, srcHeight, 1.0f);
-            if (mRotateAngle != 0.0f) {
-                Matrix.rotateM(mModelMatrix, 0, mRotateAngle, 0.0f, 0.0f, 1.0f);
-            }
-
-            if (mFlipY) {
-                Matrix.rotateM(mModelMatrix, 0, 180.0f, 1.0f, 0.0f, 0.0f);
-            }
-
-            if (mFlipX) {
-                Matrix.rotateM(mModelMatrix, 0, 180.0f, 0.0f, 1.0f, 0.0f);
-            }
-
-            Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mModelMatrix, 0);
-            Matrix.multiplyMM(mMVPMatrix, 0, mMVPMatrix, 0, mViewMatrix, 0);
+        try {
+            File file = new File(dir + fileName + ".jpg");
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void onResume() {

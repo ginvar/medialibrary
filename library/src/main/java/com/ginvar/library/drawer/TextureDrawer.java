@@ -1,5 +1,6 @@
 package com.ginvar.library.drawer;
 
+import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
@@ -174,9 +175,9 @@ public class TextureDrawer {
             Matrix.setIdentityM(mModelMatrix, 0);
 
             Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-            Matrix.orthoM(mProjectionMatrix, 0, 0.0f, mInputWidth, 0.0f, mInputHeight, -2.0f, 2.0f);
-            Matrix.translateM(mModelMatrix, 0, mInputWidth / 2, mInputHeight / 2, 0.0f);
-            Matrix.scaleM(mModelMatrix, 0, mInputWidth, mInputHeight, 1.0f);
+            Matrix.orthoM(mProjectionMatrix, 0, -1, 1, -mInputHeight / mInputWidth, mInputHeight / mInputWidth, 0.0f, 2.0f);
+//            Matrix.translateM(mModelMatrix, 0, mInputWidth / 2, mInputHeight / 2, 0.0f);
+//            Matrix.scaleM(mModelMatrix, 0, mInputWidth, mInputHeight, 1.0f);
             if (mRotateAngle != 0.0f) {
                 Matrix.rotateM(mModelMatrix, 0, mRotateAngle, 0.0f, 0.0f, 1.0f);
             }
@@ -249,9 +250,9 @@ public class TextureDrawer {
 
         buildMatrix();
 
-        // if(type == GLES20.GL_TEXTURE_2D) {
-        //     setMVPMatrix(GLDataUtils.MATRIX_4X4_IDENTITY);
-        // }
+//         if(type == GLES11Ext.GL_TEXTURE_EXTERNAL_OES) {
+//             setMVPMatrix(GLDataUtils.MATRIX_4X4_IDENTITY);
+//         }
 
         GLES20.glViewport(mViewPortX, mViewPortY, mViewPortW, mViewPortH);
 

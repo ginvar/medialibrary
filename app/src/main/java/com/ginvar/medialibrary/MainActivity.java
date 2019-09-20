@@ -10,6 +10,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.anthonycr.grant.PermissionsManager;
+import com.anthonycr.grant.PermissionsResultAction;
+
+
 public class MainActivity extends AppCompatActivity {
 
     // Used to load the 'native-lib' library on application startup.
@@ -25,6 +29,23 @@ public class MainActivity extends AppCompatActivity {
         // Example of a call to a native method
         // TextView tv = (TextView) findViewById(R.id.sample_text);
         // tv.setText(stringFromJNI());
+        PermissionsManager.getInstance().requestAllManifestPermissionsIfNecessary(this, new PermissionsResultAction() {
+            @Override
+            public void onGranted() {
+//                Toast.makeText(MainActivity.this, R.string.message_granted, Toast.LENGTH_SHORT).show();
+//                writeToStorage("Hello, World!");
+//                readFromStorage();
+                Log.i("medialibrary", "onGranted");
+            }
+
+            @Override
+            public void onDenied(String permission) {
+
+                Log.i("medialibrary", "onDenied: " + permission);
+//                String message = String.format(Locale.getDefault(), getString(R.string.message_denied), permission);
+//                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
 
 
         LinearLayout mLayout = (LinearLayout) findViewById(R.id.buttonLayout);
