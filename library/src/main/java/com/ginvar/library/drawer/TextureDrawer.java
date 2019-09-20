@@ -176,7 +176,7 @@ public class TextureDrawer {
 
             Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
             Matrix.orthoM(mProjectionMatrix, 0, -1, 1, -mInputHeight / mInputWidth, mInputHeight / mInputWidth, 0.0f, 2.0f);
-//            Matrix.translateM(mModelMatrix, 0, mInputWidth / 2, mInputHeight / 2, 0.0f);
+//            Matrix.translateM(mModelMatrix, 0, mInputWidth / 2, mInputHeight / 2, 0.0f); 
 //            Matrix.scaleM(mModelMatrix, 0, mInputWidth, mInputHeight, 1.0f);
             if (mRotateAngle != 0.0f) {
                 Matrix.rotateM(mModelMatrix, 0, mRotateAngle, 0.0f, 0.0f, 1.0f);
