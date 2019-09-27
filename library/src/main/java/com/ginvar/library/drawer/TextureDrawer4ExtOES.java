@@ -43,7 +43,7 @@ public class TextureDrawer4ExtOES extends TextureDrawer {
     }
 
     @Override
-    public void drawTexture(int texID, int inputWidth, int inputHeight, int outputWidth, int outputHeight) {
-        _drawTexture(texID, GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputWidth, inputHeight, outputWidth, outputHeight);
+    public void drawTexture(int texID, float[] textureVertex, int inputWidth, int inputHeight, int outputWidth, int outputHeight) {
+        _drawTexture(texID, GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureVertex, inputWidth, inputHeight, outputWidth, outputHeight);
     }
 }

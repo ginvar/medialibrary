@@ -34,23 +34,6 @@ public class PreviewRender implements SurfaceTexture.OnFrameAvailableListener {
 
     private static final String TAG = PreviewRender.class.getSimpleName();
 
-    public static final float[] MATRIX_4X4_IDENTITY = {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-    };
-
-    protected float[] mModelMatrix = new float[16];
-    protected float[] mProjectionMatrix = new float[16];
-    protected float[] mViewMatrix = new float[16];
-
-    protected float[] mMVPMatrix = new float[16];
-
-    protected boolean mFlipY = false;
-    protected boolean mFlipX = false;
-    protected float mRotateAngle = 0.0f;
-
     private SurfaceTexture mCaptureSurfaceTexture;
     private int mCaptureTextureId;
     protected float[] mTransformMatrix = new float[16];
@@ -359,8 +342,7 @@ public class PreviewRender implements SurfaceTexture.OnFrameAvailableListener {
                 //
                 // mFrameRenderer.update(mCaptureTextureId, mTransformMatrix);
 
-                mTextureDrawer4ExtOES.setTransform(mTransformMatrix);
-                mTextureDrawer4ExtOES.drawTexture(mCaptureTextureId, previewHeight, previewWidth, previewHeight, previewWidth);
+                mTextureDrawer4ExtOES.drawTexture(mCaptureTextureId, mTransformMatrix, previewHeight, previewWidth, previewHeight, previewWidth);
 
                 GLES20.glFlush();
 
@@ -385,9 +367,7 @@ public class PreviewRender implements SurfaceTexture.OnFrameAvailableListener {
                 // GLES20.glViewport(mDrawViewport.x, mDrawViewport.y, mDrawViewport.width, mDrawViewport.height);
 
 
-
-                mTextureDrawer.setTransform(GLDataUtils.MATRIX_4X4_IDENTITY);
-                mTextureDrawer.drawTexture(mPreviewFBO.getTextureId(), mPreviewFBO.getWidth(), mPreviewFBO.getHeight
+                mTextureDrawer.drawTexture(mPreviewFBO.getTextureId(), GLDataUtils.MATRIX_4X4_IDENTITY, mPreviewFBO.getWidth(), mPreviewFBO.getHeight
                         (), mViewWidth, mViewHeight);
 
                 mPreviewWindowSurface.swapBuffers();

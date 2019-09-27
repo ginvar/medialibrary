@@ -175,8 +175,18 @@ public class TextureDrawer {
             Matrix.setIdentityM(mModelMatrix, 0);
 
             Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-            Matrix.orthoM(mProjectionMatrix, 0, -1, 1, -mInputHeight / mInputWidth, mInputHeight / mInputWidth, 0.0f, 2.0f);
-//            Matrix.translateM(mModelMatrix, 0, mInputWidth / 2, mInputHeight / 2, 0.0f); 
+            if (mOutputWidth > mOutputHeight) {
+                float x = mOutputWidth / ((float) mOutputHeight / mInputHeight * mInputWidth);
+                Matrix.orthoM(mProjectionMatrix, 0, -x, x, -1, 1, -1, 1);
+            } else {
+                float y = mOutputHeight / ((float) mOutputWidth / mInputWidth * mInputHeight);
+                Matrix.orthoM(mProjectionMatrix, 0, -1, 1, -y, y, -1, 1);
+            }
+
+//            Matrix.orthoM(mProjectionMatrix, 0, -1, 1, -1, 1, -1, 1);
+
+//            Matrix.orthoM(mProjectionMatrix, 0, -1, 1, -mOutputHeight * 1.0f / mOutputWidth, mOutputHeight * 1.0f / mOutputWidth, 0.0f, 2.0f);
+//            Matrix.translateM(mModelMatrix, 0, mInputWidth / 2, mInputHeight / 2, 0.0f);
 //            Matrix.scaleM(mModelMatrix, 0, mInputWidth, mInputHeight, 1.0f);
             if (mRotateAngle != 0.0f) {
                 Matrix.rotateM(mModelMatrix, 0, mRotateAngle, 0.0f, 0.0f, 1.0f);
@@ -190,8 +200,8 @@ public class TextureDrawer {
                 Matrix.rotateM(mModelMatrix, 0, 180.0f, 0.0f, 1.0f, 0.0f);
             }
 
-            Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mModelMatrix, 0);
-            Matrix.multiplyMM(mMVPMatrix, 0, mMVPMatrix, 0, mViewMatrix, 0);
+            Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
+            Matrix.multiplyMM(mMVPMatrix, 0, mMVPMatrix, 0, mModelMatrix, 0);
 
             setMVPMatrix(mMVPMatrix);
             mDirty = false;
@@ -238,12 +248,12 @@ public class TextureDrawer {
         }
     }
 
-    public void drawTexture(int texID, int inputWidth, int inputHeight, int outputWidth, int outputHeight) {
+    public void drawTexture(int texID, float[] textureVertex, int inputWidth, int inputHeight, int outputWidth, int outputHeight) {
 
-        _drawTexture(texID, GLES20.GL_TEXTURE_2D, inputWidth, inputHeight, outputWidth, outputHeight);
+        _drawTexture(texID, GLES20.GL_TEXTURE_2D, textureVertex, inputWidth, inputHeight, outputWidth, outputHeight);
     }
 
-    protected void _drawTexture(int texID, int type, int inputWidth, int inputHeight, int outputWidth, int
+    protected void _drawTexture(int texID, int type, float[] textureVertex, int inputWidth, int inputHeight, int outputWidth, int
             outputHeight) {
 
         checkRenderDirty(inputWidth, inputHeight, outputWidth, outputHeight);
@@ -254,8 +264,11 @@ public class TextureDrawer {
 //             setMVPMatrix(GLDataUtils.MATRIX_4X4_IDENTITY);
 //         }
 
-        GLES20.glViewport(mViewPortX, mViewPortY, mViewPortW, mViewPortH);
+//        GLES20.glViewport(mViewPortX, mViewPortY, mViewPortW, mViewPortH);
 
+        setTransform(textureVertex);
+
+        GLES20.glViewport(0,0, mOutputWidth, mOutputHeight);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(type, texID);
