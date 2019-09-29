@@ -24,28 +24,18 @@ public class FilterManager {
 
     private ArrayList<AbstractYYMediaFilter> mInputFilters = new ArrayList<>();
     private ArrayList<AbstractYYMediaFilter> mOutputFilters = new ArrayList<>();
-    private ArrayList<AbstractYYMediaFilter> mBaseFilters = new ArrayList<>();
-//    private AbstractYYMediaFilter mFirst = new AbstractYYMediaFilter();
-//    private AbstractYYMediaFilter mTailFilters = new AbstractYYMediaFilter();
-//    private AbstractYYMediaFilter mTailFilters = new AbstractYYMediaFilter();
+
 
     private ArrayList<AbstractYYMediaFilter> mLevelNode = new ArrayList<>();
 
     private Context mContext = null;
     private int mOFContext = -1;
 
-    private int mLowestFilterId = -1;
-    private int mHighestFilterId = -1;
-
-
     private AtomicInteger mFilterID = new AtomicInteger(0);
 
     public FilterManager(Context context, int ofContext) {
         mContext = context;
         mOFContext = ofContext;
-
-//        mHeadFilters.addDownStream(mTailFilters);
-//        mTailFilters.addUpStream(mHeadFilters);
 
 
         for(int i = 0; i < 3; i++) {
@@ -71,13 +61,11 @@ public class FilterManager {
                 addFilterWithPriorityLevel(filter, Filter_Priority_1);
 
             } else if ((flag & Low_Priority_Filter_Mask) > 0) {
-//                mBaseFilters.add(filter);
 
                 addFilterWithPriorityLevel(filter, Filter_Priority_2);
 
             } else if ((flag & High_Priority_Filter_Mask) > 0) {
                 //直接在head前面追加
-//                mBaseFilters.add(0, filter);
 
                 addFilterWithPriorityLevel(filter, Filter_Priority_0);
             }
@@ -93,15 +81,10 @@ public class FilterManager {
         }
 
         mediaFilter.configFilter(jsonCfg);
-//        ((AbstractYYMediaFilter)mFilterList.get(mFilterList.size()-1)).addDownStream(mediaFilter);
-//        mFilterList.add(mediaFilter);
+
         return mediaFilter;
     }
 
-//    //获取所有输出到ID为outputFilterId的特效列表
-//    private ArrayList<AbstractYYMediaFilter> getFilterList(int outputFilterId) {
-//        ArrayList<AbstractYYMediaFilter>
-//    }
 
     public void removeFilter(int id) {
         for(int i = 0; i < mInputFilters.size(); i++) {
@@ -138,16 +121,7 @@ public class FilterManager {
     }
 
     private void performFilterLayout() {
-//        for(int i = 0; i < mInputFilters.size(); i++) {
-//            AbstractYYMediaFilter inputfilter = mInputFilters.get(i);
-//
-//            inputfilter.removeAllDownStream();
-//
-//            inputfilter.addDownStream(mHeadFilters);
-//            mHeadFilters.addUpStream(inputfilter);
-//        }
-//
-//        for(i)
+
     }
 
     private void addFilterWithPriorityLevel(AbstractYYMediaFilter filter, int priority) {
