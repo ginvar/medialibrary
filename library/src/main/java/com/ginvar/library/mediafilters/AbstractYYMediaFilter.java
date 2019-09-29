@@ -7,12 +7,15 @@ import java.util.ArrayList;
 
 public class AbstractYYMediaFilter implements IMediaFilter {
 
-    protected ArrayList<IMediaFilter> mDownStreamList = new ArrayList<IMediaFilter>();
+    protected ArrayList<AbstractYYMediaFilter> mDownStreamList = new ArrayList<AbstractYYMediaFilter>();
 
+    protected ArrayList<AbstractYYMediaFilter> mUpStreamList = new ArrayList<AbstractYYMediaFilter>();
+    public int mFilterId = -1;
 //    protected FilterInfo mFilterInfo = null;
     @Override
     public boolean processMediaSample(YYMediaSample sample, Object upstream) {
-        return false;
+        deliverToDownStream(sample);
+        return true;
     }
 
     @Override
@@ -20,15 +23,16 @@ public class AbstractYYMediaFilter implements IMediaFilter {
 
     }
 
-    public AbstractYYMediaFilter addDownStream(IMediaFilter downStream) {
+    public AbstractYYMediaFilter addDownStream(AbstractYYMediaFilter downStream) {
         //keep unique
         if (mDownStreamList.indexOf(downStream) < 0) {
             mDownStreamList.add(downStream);
         }
+
         return this;
     }
 
-    public void removeDownStream(IMediaFilter downStrean) {
+    public void removeDownStream(AbstractYYMediaFilter downStrean) {
         mDownStreamList.remove(downStrean);
     }
 
@@ -40,5 +44,31 @@ public class AbstractYYMediaFilter implements IMediaFilter {
         for (IMediaFilter filter : mDownStreamList) {
             filter.processMediaSample(sample, this);
         }
+    }
+
+    public ArrayList<AbstractYYMediaFilter> getUpStreamList() {
+        return mUpStreamList;
+    }
+    public ArrayList<AbstractYYMediaFilter> getDownStreamList() {
+        return mDownStreamList;
+    }
+
+
+    public AbstractYYMediaFilter addUpStream(AbstractYYMediaFilter upStream) {
+        //keep unique
+        if (mUpStreamList.indexOf(upStream) < 0) {
+            mUpStreamList.add(upStream);
+        }
+
+        return this;
+    }
+
+
+    public void removeUpStream(AbstractYYMediaFilter upStream) {
+        mUpStreamList.remove(upStream);
+    }
+
+    public void removeAllUpStream() {
+        mUpStreamList.clear();
     }
 }
