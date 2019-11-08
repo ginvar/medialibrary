@@ -35,7 +35,7 @@ public class CameraDemoActivity extends AppCompatActivity {
 //         mCameraView.setZOrderMediaOverlay(true);
 
         mCameraView = (SurfaceView) findViewById(R.id.myGLSurfaceView);
-        mVideoRecordSession = new VideoRecordSession(mCameraView);
+        mVideoRecordSession = new VideoRecordSession(this, mCameraView);
         // mVideoRecordSession.startPreview();
     }
 

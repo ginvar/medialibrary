@@ -3,6 +3,7 @@ package com.ginvar.library.gpuimagefilters;
 import com.ginvar.library.api.common.FilterType;
 import com.ginvar.library.mediafilters.CameraCaptureFilter;
 import com.ginvar.library.mediafilters.IMediaFilter;
+import com.ginvar.library.mediafilters.PreviewFilter;
 
 import java.util.HashMap;
 
@@ -31,6 +32,7 @@ public class FilterFactory {
     public void init() {
 
         registerFilterCls(FilterType.CAMERA_CAPTURE_FILTER, CameraCaptureFilter.class);
+        registerFilterCls(FilterType.PREVIEW_FILTER, PreviewFilter.class);
     }
 
     private void registerFilterCls(int type, Class cls) {

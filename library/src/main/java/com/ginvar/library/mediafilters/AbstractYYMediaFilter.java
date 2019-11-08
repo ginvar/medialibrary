@@ -4,6 +4,7 @@ import com.ginvar.library.model.FilterInfo;
 import com.ginvar.library.model.YYMediaSample;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class AbstractYYMediaFilter implements IMediaFilter {
 
@@ -19,7 +20,12 @@ public class AbstractYYMediaFilter implements IMediaFilter {
     }
 
     @Override
-    public void configFilter(String jsonCfg) {
+    public void configFilter(Map<String, Object> config) {
+
+    }
+
+    @Override
+    public void updateParams(Map<String, Object> config) {
 
     }
 

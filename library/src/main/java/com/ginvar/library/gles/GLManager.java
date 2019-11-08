@@ -58,7 +58,7 @@ public class GLManager implements Runnable {
         return mOffscreenSurface.getEglCore();
     }
 
-    public Object getEglContext() {
+    public EGLContext getEglContext() {
         return mOffscreenSurface.getEglCore().getEGLContext();
     }
 
@@ -141,6 +141,21 @@ public class GLManager implements Runnable {
                 Log.e(TAG, "[exception]deInitEGL exception occur, " + t.toString());
             }
         }
+    }
+
+    //TODO. double-check for thread safty.
+    public void quit() {
+        Log.i(TAG, "[tracer] quit GlManager thread.");
+        mGLHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                Looper loop = Looper.myLooper();
+                if (null != loop) {
+                    loop.quit();
+                }
+            }
+        });
     }
 
     // public void onSurfaceCreated(SurfaceHolder holder) {

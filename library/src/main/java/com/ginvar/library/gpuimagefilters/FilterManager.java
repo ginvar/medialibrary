@@ -5,25 +5,16 @@ import android.content.Context;
 import com.ginvar.library.mediafilters.AbstractYYMediaFilter;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FilterManager {
 
-    public static final int Input_Filter_Mask = 0x01;
-    public static final int Output_Filter_Mask = 0x02;
-    public static final int Process_Filter_Mask = 0x04;
-
-    public static final int High_Priority_Filter_Mask = 0x08;
-    public static final int Low_Priority_Filter_Mask = 0x0A;
-
-
-
-    public static final int Filter_Priority_0 = 0;
-    public static final int Filter_Priority_1 = 1;
-    public static final int Filter_Priority_2 = 2;
-
     private ArrayList<AbstractYYMediaFilter> mInputFilters = new ArrayList<>();
     private ArrayList<AbstractYYMediaFilter> mOutputFilters = new ArrayList<>();
+
+    private ArrayList<AbstractYYMediaFilter> mBaseFilter = new ArrayList<>();
 
 
     private ArrayList<AbstractYYMediaFilter> mLevelNode = new ArrayList<>();
@@ -37,119 +28,66 @@ public class FilterManager {
         mContext = context;
         mOFContext = ofContext;
 
+    }
 
-        for(int i = 0; i < 3; i++) {
-            AbstractYYMediaFilter levelFilter = new AbstractYYMediaFilter();
-            mLevelNode.add(levelFilter);
+    public void addPathInFilter(AbstractYYMediaFilter filter) {
+        if(mInputFilters.indexOf(filter) < 0) {
+            mInputFilters.add(filter);
+        }
 
-            if(i > 0) {
-                linkToFilter(mLevelNode.get(i-1), mLevelNode.get(i));
+        performLayout();
+    }
+
+    public void addPathOutFilter(AbstractYYMediaFilter filter) {
+        if(mOutputFilters.indexOf(filter) < 0) {
+            mOutputFilters.add(filter);
+        }
+
+        performLayout();
+    }
+
+    public int addFilter(int type, Map<String, Object> config) {
+        AbstractYYMediaFilter filter = (AbstractYYMediaFilter) FilterFactory.getInstance().createFilter(type);
+        filter.configFilter(config);
+
+        mBaseFilter.add(filter);
+        performLayout();
+
+        return mBaseFilter.size() - 1;
+    }
+
+    private void performLayout() {
+
+        if(mBaseFilter.isEmpty()) {
+
+            defaultLayout();
+            return;
+        }
+
+        for(AbstractYYMediaFilter filter : mInputFilters) {
+            filter.removeAllDownStream();
+            filter.addDownStream(mBaseFilter.get(0));
+        }
+
+        for (int i = 0, j = 1; i < mBaseFilter.size() && j < mBaseFilter.size(); i++, j++) {
+            mBaseFilter.get(i).removeAllDownStream();
+            mBaseFilter.get(i).addDownStream(mBaseFilter.get(j));
+
+        }
+
+        mBaseFilter.get(mBaseFilter.size() - 1).removeAllDownStream();
+
+        for(AbstractYYMediaFilter filter : mOutputFilters) {
+            mBaseFilter.get(mBaseFilter.size() - 1).addDownStream(filter);
+        }
+    }
+
+    private void defaultLayout() {
+        for(AbstractYYMediaFilter infilter : mInputFilters) {
+            infilter.removeAllDownStream();
+            for(AbstractYYMediaFilter outfilter : mOutputFilters) {
+                infilter.addDownStream(outfilter);
             }
         }
-    }
-
-    public AbstractYYMediaFilter addFilter(int type, String jsonCfg, int flag) {
-        AbstractYYMediaFilter filter = initFilter(type, jsonCfg);
-
-        if(filter != null) {
-            if ((flag & Input_Filter_Mask) > 0) {
-                mInputFilters.add(filter);
-            } else if ((flag & Output_Filter_Mask) > 0) {
-                mOutputFilters.add(filter);
-            } else if((flag & Process_Filter_Mask) > 0) {
-
-                addFilterWithPriorityLevel(filter, Filter_Priority_1);
-
-            } else if ((flag & Low_Priority_Filter_Mask) > 0) {
-
-                addFilterWithPriorityLevel(filter, Filter_Priority_2);
-
-            } else if ((flag & High_Priority_Filter_Mask) > 0) {
-                //直接在head前面追加
-
-                addFilterWithPriorityLevel(filter, Filter_Priority_0);
-            }
-        }
-
-        return filter;
-    }
-
-    private AbstractYYMediaFilter initFilter(int type, String jsonCfg) {
-        AbstractYYMediaFilter mediaFilter = (AbstractYYMediaFilter)FilterFactory.getInstance().createFilter(type);
-        if(mediaFilter instanceof OFBaseEffectFilter) {
-            ((OFBaseEffectFilter) mediaFilter).init(mContext, mOFContext);
-        }
-
-        mediaFilter.configFilter(jsonCfg);
-
-        return mediaFilter;
-    }
-
-
-    public void removeFilter(int id) {
-        for(int i = 0; i < mInputFilters.size(); i++) {
-            AbstractYYMediaFilter inputFilter = mInputFilters.get(i);
-            AbstractYYMediaFilter resFilter = search(inputFilter, id);
-            if(resFilter != null) {
-                for(int j = 0; j < resFilter.getUpStreamList().size(); j++) {
-                    AbstractYYMediaFilter usFilter = resFilter.getUpStreamList().get(j);
-                    usFilter.removeDownStream(resFilter);
-
-                    for(int k = 0; k < resFilter.getDownStreamList().size(); k++) {
-                        AbstractYYMediaFilter dsFilter = resFilter.getDownStreamList().get(k);
-                        dsFilter.removeUpStream(resFilter);
-                        usFilter.addDownStream(resFilter.getDownStreamList().get(k));
-
-                    }
-                }
-            }
-        }
-    }
-
-    private AbstractYYMediaFilter search(AbstractYYMediaFilter filter, int filterId) {
-        if(filter.mFilterId == filterId) {
-            return filter;
-        }
-        for(int i = 0; i < filter.getDownStreamList().size(); i++) {
-            AbstractYYMediaFilter downStreamFilter = filter.getDownStreamList().get(i);
-            AbstractYYMediaFilter resFilter = search(downStreamFilter, filterId);
-            if(resFilter != null) {
-                return resFilter;
-            }
-        }
-        return null;
-    }
-
-    private void performFilterLayout() {
-
-    }
-
-    private void addFilterWithPriorityLevel(AbstractYYMediaFilter filter, int priority) {
-
-        if(priority == Filter_Priority_0) {
-            for(int i = 0; i < mLevelNode.get(priority).getDownStreamList().size(); i++) {
-                AbstractYYMediaFilter dsFilter = mLevelNode.get(priority).getDownStreamList().get(i);
-                filter.addDownStream(dsFilter);
-                dsFilter.removeUpStream(mLevelNode.get(priority));
-                mLevelNode.get(priority).removeDownStream(dsFilter);
-            }
-            mLevelNode.get(priority).addDownStream(filter);
-        } else {
-            for (int i = 0; i < mLevelNode.get(priority).getUpStreamList().size(); i++) {
-                AbstractYYMediaFilter t = mLevelNode.get(priority).getUpStreamList().get(i);
-                t.removeDownStream(mLevelNode.get(priority));
-                mLevelNode.get(priority).removeUpStream(t);
-                t.addDownStream(filter);
-                filter.addUpStream(t);
-            }
-
-            filter.addDownStream(mLevelNode.get(priority));
-            mLevelNode.get(priority).addUpStream(filter);
-        }
-    }
-
-    private void linkToFilter(AbstractYYMediaFilter filter1, AbstractYYMediaFilter filter2) {
-        filter1.addDownStream(filter2);
-        filter2.addUpStream(filter1);
     }
 }

@@ -3,20 +3,29 @@ package com.ginvar.library.mediarecord;
 import android.content.Context;
 import android.hardware.Camera;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.ginvar.library.api.common.FilterType;
 import com.ginvar.library.camera.CameraInstance;
 import com.ginvar.library.gpuimagefilters.FilterFactory;
+import com.ginvar.library.gpuimagefilters.FilterKey;
+import com.ginvar.library.gpuimagefilters.FilterManager;
 import com.ginvar.library.gpuimagefilters.OFBaseEffectFilter;
 import com.ginvar.library.mediafilters.AbstractYYMediaFilter;
 import com.ginvar.library.mediafilters.CameraCaptureFilter;
 import com.ginvar.library.mediafilters.IMediaFilter;
 import com.ginvar.library.mediafilters.MediaFilterContext;
+import com.ginvar.library.mediafilters.PreviewFilter;
+import com.ginvar.library.model.Size;
 import com.ginvar.library.render.PreviewRender;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by ginvar on 2019/8/28.
@@ -28,6 +37,11 @@ public class VideoRecordSession implements SurfaceHolder.Callback{
     private ArrayList<IMediaFilter> mFilterList = new ArrayList<>();
     private MediaFilterContext mMediaFilterContext = null;
 
+    private CameraCaptureFilter mCameraCaptureFilter = null;
+    private PreviewFilter mPreviewFilter = null;
+
+    private FilterManager mFilterManager = null;
+
     public VideoRecordSession(Context context, SurfaceView surfaceView) {
 
 //        mPreviewRender = new PreviewRender();
@@ -37,33 +51,55 @@ public class VideoRecordSession implements SurfaceHolder.Callback{
 //
 //        mPreviewRender.init();
         mMediaFilterContext = new MediaFilterContext(context, null);
+        mFilterManager = new FilterManager(context, 0);
+
         mSurfaceView = surfaceView;
+        mSurfaceView.getHolder().addCallback(this);
+
+        HashMap<String, Object> config = new HashMap<String, Object>();
+        Size sz = new Size();
+        sz.setWidth(720);
+        sz.setHeight(1280);
+        config.put(FilterKey.KEY_PRESET_CAPTURE_SIZE, sz);
+        mCameraCaptureFilter = new CameraCaptureFilter(context, mMediaFilterContext);
+        mCameraCaptureFilter.init();
+        mCameraCaptureFilter.configFilter(config);
+
+        mPreviewFilter = new PreviewFilter(context, mMediaFilterContext);
+        mPreviewFilter.init();
+
+        mFilterManager.addPathInFilter(mCameraCaptureFilter);
+        mFilterManager.addPathOutFilter(mPreviewFilter);
     }
 
     public void init() {
-        addFilter(FilterType.CAMERA_CAPTURE_FILTER, "");
-        addFilter(FilterType.PREVIEW_FILTER, "");
+//        addFilter(FilterType.CAMERA_CAPTURE_FILTER, "");
+//        addFilter(FilterType.PREVIEW_FILTER, "");
     }
 
     public void onResume() {
-        //mPreviewRender.startPreview();
+        if(mCameraCaptureFilter != null) {
+            mCameraCaptureFilter.startPreview();
+        }
+
+//        mPreviewRender.startPreview();
     }
 
     public void startPreview() {
         //mPreviewRender.startPreview();
     }
 
-    public int addFilter(int type, String jsonCfg) {
-        AbstractYYMediaFilter mediaFilter = (AbstractYYMediaFilter)FilterFactory.getInstance().createFilter(type);
-        if(mediaFilter instanceof OFBaseEffectFilter) {
-            ((OFBaseEffectFilter) mediaFilter).init(mMediaFilterContext.getAndroidContext(), -1);
-        }
+    public int addFilter(int type, Map<String, Object> config) {
+//        AbstractYYMediaFilter mediaFilter = (AbstractYYMediaFilter)FilterFactory.getInstance().createFilter(type);
+//        if(mediaFilter instanceof OFBaseEffectFilter) {
+//            ((OFBaseEffectFilter) mediaFilter).init(mMediaFilterContext.getAndroidContext(), -1);
+//        }
+//
+//        mediaFilter.configFilter(config);
+//        ((AbstractYYMediaFilter)mFilterList.get(mFilterList.size()-1)).addDownStream(mediaFilter);
+//        mFilterList.add(mediaFilter);
 
-        mediaFilter.configFilter(jsonCfg);
-        ((AbstractYYMediaFilter)mFilterList.get(mFilterList.size()-1)).addDownStream(mediaFilter);
-        mFilterList.add(mediaFilter);
-
-        return mFilterList.size() - 1;
+        return mFilterManager.addFilter(type, config);
     }
 
     public void removeFilter(int id) {
@@ -79,7 +115,9 @@ public class VideoRecordSession implements SurfaceHolder.Callback{
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+        if(mPreviewFilter != null) {
+            mPreviewFilter.onSurfaceChanged(holder, format, width, height);
+        }
     }
 
     @Override
