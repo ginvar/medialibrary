@@ -44,6 +44,7 @@ public class YYMediaSample {
     //默认h264的硬编码.
     public VideoEncoderType mEncoderType = VideoEncoderType.HARD_ENCODER_H264;
 
+    public boolean mEndOfStream = false;
     /**
      * 来自android系统的camera采集系统打的时间戳,
      * YY传输系统的音视频同步 "不是" 基于此时间戳.

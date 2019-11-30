@@ -4,6 +4,7 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -17,7 +18,9 @@ import com.ginvar.library.mediafilters.AbstractYYMediaFilter;
 import com.ginvar.library.mediafilters.CameraCaptureFilter;
 import com.ginvar.library.mediafilters.IMediaFilter;
 import com.ginvar.library.mediafilters.MediaFilterContext;
+import com.ginvar.library.mediafilters.MediaFormatAdapterFilter;
 import com.ginvar.library.mediafilters.PreviewFilter;
+import com.ginvar.library.mediafilters.VideoEncoderGroupFilter;
 import com.ginvar.library.model.Size;
 import com.ginvar.library.render.PreviewRender;
 
@@ -32,6 +35,9 @@ import java.util.Set;
  */
 
 public class VideoRecordSession implements SurfaceHolder.Callback{
+
+    private static final String TAG = VideoRecordSession.class.getSimpleName();
+
     private SurfaceView mSurfaceView = null;
     private PreviewRender mPreviewRender = null;
     private ArrayList<IMediaFilter> mFilterList = new ArrayList<>();
@@ -40,7 +46,12 @@ public class VideoRecordSession implements SurfaceHolder.Callback{
     private CameraCaptureFilter mCameraCaptureFilter = null;
     private PreviewFilter mPreviewFilter = null;
 
+    private VideoEncoderGroupFilter mVideoEncoderFilter = null;
+    MediaFormatAdapterFilter mMediaFormatAdapterFilter = null;
+
     private FilterManager mFilterManager = null;
+
+    private Object mRecordLock = new Object();
 
     public VideoRecordSession(Context context, SurfaceView surfaceView) {
 
@@ -68,6 +79,10 @@ public class VideoRecordSession implements SurfaceHolder.Callback{
         mPreviewFilter = new PreviewFilter(context, mMediaFilterContext);
         mPreviewFilter.init();
 
+
+        mMediaFormatAdapterFilter = new MediaFormatAdapterFilter(mMediaFilterContext);
+        mMediaFormatAdapterFilter.setNAL3ValidNAL4(true);
+
         mFilterManager.addPathInFilter(mCameraCaptureFilter);
         mFilterManager.addPathOutFilter(mPreviewFilter);
     }
@@ -85,19 +100,11 @@ public class VideoRecordSession implements SurfaceHolder.Callback{
 //        mPreviewRender.startPreview();
     }
 
-    public void startPreview() {
+//    public void startPreview() {
         //mPreviewRender.startPreview();
-    }
+//    }
 
     public int addFilter(int type, Map<String, Object> config) {
-//        AbstractYYMediaFilter mediaFilter = (AbstractYYMediaFilter)FilterFactory.getInstance().createFilter(type);
-//        if(mediaFilter instanceof OFBaseEffectFilter) {
-//            ((OFBaseEffectFilter) mediaFilter).init(mMediaFilterContext.getAndroidContext(), -1);
-//        }
-//
-//        mediaFilter.configFilter(config);
-//        ((AbstractYYMediaFilter)mFilterList.get(mFilterList.size()-1)).addDownStream(mediaFilter);
-//        mFilterList.add(mediaFilter);
 
         return mFilterManager.addFilter(type, config);
     }
@@ -105,6 +112,66 @@ public class VideoRecordSession implements SurfaceHolder.Callback{
     public void removeFilter(int id) {
         if (id < mFilterList.size()) {
             mFilterList.remove(id);
+        }
+    }
+
+    public void startRecord() {
+
+        synchronized (mRecordLock) {
+            if (mMediaFilterContext != null) {
+                mMediaFilterContext.getGLManager().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (mVideoEncoderFilter != null) {
+                                mVideoEncoderFilter.startEncode(mMediaFilterContext.getVideoEncoderConfig());
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "video startRecord exception occur:" + e.getMessage());
+                        } finally {
+                            synchronized (mRecordLock) {
+                                mRecordLock.notify();
+                            }
+                        }
+                    }
+                });
+            }
+
+            try {
+                mRecordLock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stopRecord() {
+        synchronized (mRecordLock) {
+            if (mMediaFilterContext != null) {
+                mMediaFilterContext.getGLManager().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (mVideoEncoderFilter != null) {
+                                mVideoEncoderFilter.stopEncode();
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "video stopRecord exception occur:" + e.getMessage());
+                        } finally {
+                            synchronized (mRecordLock) {
+                                mRecordLock.notify();
+                            }
+                        }
+                    }
+                });
+            }
+
+            try {
+                mRecordLock.wait();
+            } catch (InterruptedException e) {
+                Log.e(TAG, "video mVideoStopRecordLock ," + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 

@@ -77,4 +77,7 @@ public class AbstractYYMediaFilter implements IMediaFilter {
     public void removeAllUpStream() {
         mUpStreamList.clear();
     }
+
+    public void deInit() {
+    }
 }

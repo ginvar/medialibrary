@@ -2,7 +2,7 @@ package com.ginvar.library.common;
 
 public final class Constant {
 
-    public static final String SDK_NAME_PREFIX = "ymrsdk_";
+    public static final String SDK_NAME_PREFIX = "medialibrary_";
 
     public enum ScaleMode {
         /**
